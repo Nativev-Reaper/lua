@@ -1,0 +1,77 @@
+function onPlayerEntered(newPlayer)
+local stats = Instance.new("IntValue")
+stats.Name = "leaderstats"
+local kills = Instance.new("IntValue")
+kills.Name = "KOs"
+kills.Value = 0
+local deaths = Instance.new("IntValue")
+deaths.Name = "Wipeouts"
+deaths.Value = 0
+local XP = Instance.new("IntValue")
+XP.Name = "Valor"
+XP.Value = 0
+kills.Parent = stats
+deaths.Parent = stats
+XP.Parent = stats
+while true do
+if newPlayer.Character ~= nil then break end
+wait(5)
+end
+local humanoid = newPlayer.Character.Humanoid
+humanoid.Died:connect(function() onHumanoidDied(humanoid, newPlayer) end )
+newPlayer.Changed:connect(function(property) onPlayerRespawn(property, newPlayer) end )
+stats.Parent = newPlayer
+end
+function Send_DB_Event_Died(victim, killer)
+local killername = "no one"
+if killer ~= nil then killername = killer.Name end
+if shared["deaths"] ~= nil then 
+shared["deaths"](victim, killer)
+end
+end
+function AddValor()
+function Send_DB_Event_Kill(killer, victim)
+if shared["kills"] ~= nil then 
+shared["kills"](killer, victim)
+end
+end
+function onHumanoidDied(humanoid, player)
+local stats = player:findFirstChild("leaderstats")
+if stats ~= nil then
+local deaths = stats:findFirstChild("Wipeouts")
+deaths.Value = deaths.Value + 1
+local killer = getKillerOfHumanoidIfStillInGame(humanoid)
+Send_DB_Event_Died(player, killer)
+handleKillCount(humanoid, player)
+end
+end
+function onPlayerRespawn(property, player)
+if property == "Character" and player.Character ~= nil then
+local humanoid = player.Character.Humanoid
+local p = player
+local h = humanoid
+humanoid.Died:connect(function() onHumanoidDied(h, p) end )
+end
+end
+function getKillerOfHumanoidIfStillInGame(humanoid)
+local tag = humanoid:findFirstChild("creator")
+if tag ~= nil then
+local killer = tag.Value
+if killer.Parent ~= nil then
+return killer
+end
+end
+return nil
+end
+function handleKillCount(humanoid, player)
+local killer = getKillerOfHumanoidIfStillInGame(humanoid)
+if killer ~= nil then
+local stats = killer:findFirstChild("leaderstats")
+if stats ~= nil then
+local kills = stats:findFirstChild("KOs")
+if killer ~= player then
+kills.Value = kills.Value + 1
+else
+kills.Value = kills.Value - 1
+end
+Send_DB_Event_Kill(killer, player)
