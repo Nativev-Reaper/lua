@@ -1,0 +1,72 @@
+
+local admins = {"Nativev_Reaper"} --Admins here
+local groupAdmin = true --Set to true for a group to have admin
+local groupID = 4112000 --Put the group's ID
+local minRank = 17  --Admin will be granted to that rank and above.
+local openCmd = "open" --The command you use to open the doors
+local closeCmd = "close" --The command you use to close the doors.
+local DivideBy = 10--Affects both the speed and smoothness of the animation. The lower the number, The faster the doors move, but they will also be choppier.
+
+--Don't edit these variables
+local doorA = script.Parent.DoorA
+local doorB = script.Parent.DoorB
+local maxDistance = doorA.Size.Z + doorB.Size.Z
+
+local opened = false
+local moving = false
+
+--Functions
+function isAdmin(plr) --Check if the player is an admin
+	if groupAdmin and plr:GetRankInGroup(groupID) >= minRank then
+		return true
+	end
+	for i,v in pairs(admins) do
+		if plr.Name:lower() == v:lower() then
+			return true
+		end
+	end
+	return false
+end
+
+function open() --Open
+	repeat wait() until moving == false
+	if not opened then
+		moving = true
+		repeat 
+			doorA.CFrame = doorA.CFrame - doorA.CFrame.lookVector / DivideBy
+			doorB.CFrame = doorB.CFrame - doorB.CFrame.lookVector / DivideBy 
+			wait()
+		until 
+			(doorA.Position - doorB.Position).magnitude - doorA.Size.Z >= maxDistance
+		opened = true	
+		moving = false
+	end
+end
+
+function close() --Close
+	repeat wait() until moving == false
+	if opened then
+		moving = true
+		repeat 
+			doorA.CFrame = doorA.CFrame + doorA.CFrame.lookVector / DivideBy
+			doorB.CFrame = doorB.CFrame + doorB.CFrame.lookVector / DivideBy 
+			wait()
+		until 
+			(doorA.Position - doorB.Position).magnitude - doorA.Size.Z <= 0
+		opened = false	
+		moving = false
+	end
+end
+
+--Main part
+game.Players.PlayerAdded:connect(function(plr)
+	if isAdmin(plr) then
+		plr.Chatted:connect(function(msg)
+			if msg == openCmd then
+				open()
+			elseif msg == closeCmd then
+				close()
+			end
+		end)
+	end
+end)
